@@ -7,7 +7,6 @@ import re
 import textract
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from datetime import datetime
 nltk.download('vader_lexicon')
 
 class analyzetranscript:
@@ -19,7 +18,6 @@ class analyzetranscript:
         self.sentiments_data=[]
         self.tickers=[]
         self.sentiment_analyzer=SentimentIntensityAnalyzer()
-       
     
     def concat_dataframes(self,dataframes,axisvalue):
         return pd.concat(dataframes,axis=axisvalue,join='inner').dropna()
@@ -72,30 +70,26 @@ class analyzetranscript:
     #https://realpython.com/working-with-files-in-python/
     def create_sentiment_data(self):
         encoding = 'utf-8'
-        self.sentiments_data=[]
+        
         for ticker in self.tickers:
             search_pattern=f'{ticker}*{self.file_extension}'
             for filename in os.listdir(self.resource_path):
                 if fm.fnmatch(filename,search_pattern):
                     #Extract the content from PDF
-                    transcript_quarter=f'{(filename.split(".")[0]).split("_")[2]}:'
                     transcript_content=textract.process(f'{self.resource_path}/{filename}')
                     transcript_content=transcript_content.decode(encoding)
                     transcript_content=str(transcript_content).replace("\n", "").replace("\\", "")
-                    transcript_date=self.find_substring(transcript_content,transcript_quarter,9)
-                    if isinstance(transcript_date,str):
-                        
-                        self.sentiments_data.append(
-                            self.get_sentiment_scores(
-                                transcript_content,
-                                transcript_date.strip(),
-                                ticker,
-                                filename
-                            )
+                    transcript_date=''
+                    self.sentiments_data.append(
+                        self.get_sentiment_scores(
+                            transcript_content,
+                            transcript_date,
+                            ticker,
+                            filename
+                        )
                     )
 
         transcript_df=pd.DataFrame(self.sentiments_data)
-        transcript_df
         transcript_df=transcript_df.sort_values(by=['source','date'])
         transcript_df.set_index('date',inplace=True)
         return transcript_df
@@ -104,7 +98,7 @@ class analyzetranscript:
         sentiment_scores = {}
         # Sentiment scoring with VADER
         text_sentiment = self.sentiment_analyzer.polarity_scores(text)
-        sentiment_scores["date"] = pd.to_datetime(date,format='%m-%d-%y')
+        sentiment_scores["date"] = date
         sentiment_scores["text"] = text
         sentiment_scores["source"] = source
         sentiment_scores["path"] = path
