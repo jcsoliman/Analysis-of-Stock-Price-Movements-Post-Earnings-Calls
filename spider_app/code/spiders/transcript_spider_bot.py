@@ -8,19 +8,26 @@ from dateutil.parser import parse as parse_date
 import spider.spiderSettings as settings
 from spider.pipelines import JsonWriterPipeline
 from spider.pipelines import DataPipeline
+from urllib.parse import urlparse
+import sys
+import pandas as pd
+import random
 
 import logging
 # from scrapy.exceptions import CloseSpider
 
+
 class TranscriptSpider(scrapy.Spider):
     name = "transcripts"
     rotate_user_agent = True # Necessary to avoid getting blocked by domain
-
+    allowed_domains = ['seekingalpha.com']
     custom_settings = {
         'LOG_LEVEL': logging.WARNING,
         'ITEM_PIPELINES': settings.ITEM_PIPELINES, 
         'FEED_FORMAT':settings.FEED_FORMAT,                     
-        'FEED_URI': 'transcript.json'
+        'FEED_URI': settings.FEED_URI,
+        'DOWNLOAD_DELAY': settings.DOWNLOAD_DELAY,
+        'LOG_ENABLED':False
         
     }
     # Allow the companies for scraping to be specified by ticker symbol

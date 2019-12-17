@@ -178,7 +178,7 @@ FEED_EXPORTERS = {
  'jsonlines': 'scrapy.exporters.JsonLinesItemExporter',
 }
 FEED_FORMAT = 'jsonlines'
-FEED_URI = "company_transcripts/%(symbol)s.json"     # use this line for single company crawling
+FEED_URI = "./Resources/%(symbol)s.json"     # use this line for single company crawling
 # FEED_URI = "company_transcripts/transcripts.json"     # use this line for crawling multiple companies
 
 # LOG_FILE = 'spider_log'
