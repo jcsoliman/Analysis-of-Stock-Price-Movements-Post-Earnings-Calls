@@ -8,6 +8,7 @@ import textract
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from datetime import datetime
+from datafunctions import datafunctions as funcs
 nltk.download('vader_lexicon')
 
 class analyzetranscript:
@@ -19,22 +20,7 @@ class analyzetranscript:
         self.sentiments_data=[]
         self.tickers=[]
         self.sentiment_analyzer=SentimentIntensityAnalyzer()
-       
-    
-    def concat_dataframes(self,dataframes,axisvalue):
-        return pd.concat(dataframes,axis=axisvalue,join='inner').dropna()
-
-    def calculate_standard_devation(self,dailyreturns,sortascending=True):
-        return dailyreturns.std().sort_values(ascending=sortascending)
-
-    def calculate_annulized_standard_devation(self,dailyreturns,workingdays=365,sortascending=True):
-        return (dailyreturns * np.sqrt(workingdays)).sort_values(ascending=sortascending)
-    
-    def calculate_rolling_standard_deviation(self,dataframe,daywindow):
-        return dataframe.rolling(window=daywindow).std()
-
-    def calculate_correlation(self,dataframe):
-        return dataframe.corr()
+        self.df_sentiment=pd.DataFrame(self.sentiments_data)
 
     def find_substring(self, strText, strSubString, Offset=None):
         try:
@@ -55,6 +41,12 @@ class analyzetranscript:
 
     def check_if_exists(self,items,item):
         return item not in items
+
+    def get_feature_values(self,col_start_index,col_end_index):
+        return self.df_sentiment.iloc[:,col_start_index:col_end_index].values
+
+    def get_target_values(self,target_column):
+        return self.df_sentiment[target_column].values
 
     #Get distinct ticker names from downloaded transcripts
     def get_tickers(self):
@@ -95,29 +87,30 @@ class analyzetranscript:
                     )
 
         transcript_df=pd.DataFrame(self.sentiments_data)
-        transcript_df
-        transcript_df=transcript_df.sort_values(by=['source','date'])
-        transcript_df.set_index('date',inplace=True)
+        transcript_df.set_index(['Ticker','Date'],inplace=True)
+        transcript_df=transcript_df.sort_values(by=['Ticker','Date'])
+        #funcs.sort_values(transcript_df,['ticker','date'])
+        self.df_sentiment=transcript_df
         return transcript_df
 
     def get_sentiment_scores(self,text, date, source, path):
         sentiment_scores = {}
         # Sentiment scoring with VADER
         text_sentiment = self.sentiment_analyzer.polarity_scores(text)
-        sentiment_scores["date"] = pd.to_datetime(date,format='%m-%d-%y')
-        sentiment_scores["text"] = text
-        sentiment_scores["source"] = source
-        sentiment_scores["path"] = path
-        sentiment_scores["compound"] = text_sentiment["compound"]
-        sentiment_scores["pos"] = text_sentiment["pos"]
-        sentiment_scores["neu"] = text_sentiment["neu"]
-        sentiment_scores["neg"] = text_sentiment["neg"]
+        sentiment_scores["Date"] = pd.to_datetime(date,format='%m-%d-%y')
+        sentiment_scores["Text"] = text
+        sentiment_scores["Ticker"] = source
+        sentiment_scores["Path"] = path
+        sentiment_scores["Compound"] = text_sentiment["compound"]
+        sentiment_scores["Pos"] = text_sentiment["pos"]
+        sentiment_scores["Neu"] = text_sentiment["neu"]
+        sentiment_scores["Neg"] = text_sentiment["neg"]
         if text_sentiment["compound"] >= 0.05:  # Positive
-            sentiment_scores["normalized"] = 1
+            sentiment_scores["Normalized"] = 1
         elif text_sentiment["compound"] <= -0.05:  # Negative
-            sentiment_scores["normalized"] = -1
+            sentiment_scores["Normalized"] = -1
         else:
-            sentiment_scores["normalized"] = 0  # Neutral
+            sentiment_scores["Normalized"] = 0  # Neutral
 
         return sentiment_scores
     
