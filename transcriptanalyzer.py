@@ -53,7 +53,7 @@ class analyzetranscript:
         for file_name in os.listdir(self.resource_path):
             if fm.fnmatch(file_name,'*'+self.file_extension):
                 #extract ticker name
-                result = re.match(r"[a-zA-z]+", file_name)
+                result = re.match(r"[a-zA-z]+", file_name.strip())
                 _filename=result.group(0).replace('_','')
                 #Check if the ticker is in the list. If not add to the list otherwise
                 #ignore the ticker
@@ -98,10 +98,10 @@ class analyzetranscript:
         # Sentiment scoring with VADER
         text_sentiment = self.sentiment_analyzer.polarity_scores(text)
         sentiment_scores["Date"] = pd.to_datetime(date,format='%m-%d-%y')
-        sentiment_scores["Text"] = text
+        #sentiment_scores["Text"] = text
         sentiment_scores["Ticker"] = source
-        sentiment_scores["Path"] = path
-        sentiment_scores["Compound"] = text_sentiment["compound"]
+        #sentiment_scores["Path"] = path
+        #sentiment_scores["Compound"] = text_sentiment["compound"]
         sentiment_scores["Pos"] = text_sentiment["pos"]
         sentiment_scores["Neu"] = text_sentiment["neu"]
         sentiment_scores["Neg"] = text_sentiment["neg"]
