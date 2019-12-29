@@ -71,7 +71,7 @@ class analyzetranscript:
         encoding = 'utf-8'
         self.sentiments_data=[]
         for ticker in self.tickers:
-            search_pattern=f'{ticker}*{self.file_extension}'
+            search_pattern=f'{ticker}_*{self.file_extension}'
             with os.scandir(self.resource_path) as files:
                 for _file in files:
                     if _file.is_file():

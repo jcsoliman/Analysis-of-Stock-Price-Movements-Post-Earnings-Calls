@@ -41,6 +41,7 @@ class financial_data:
             self.__load_share_data__()
         #funcs.drop_columns(df_prices,self.columns_to_drop)
         self.df_prices.reset_index(inplace=True)
+        self.sentiment_data.reset_index(inplace=True)
         self.df_prices.drop(columns=self.columns_to_drop,inplace=True)
         self.df_prices['Returns'] = self.df_prices['Close'].pct_change()
         self.df_prices['12-day Rolling']= self.df_prices['Returns'].rolling(window=12).mean()
@@ -49,14 +50,16 @@ class financial_data:
         self.df_prices['12-day Rolling Std']= self.df_prices['Returns'].rolling(window=12).std()
         self.df_prices['5-day Rolling Std']= self.df_prices['Returns'].rolling(window=5).std()
         self.df_prices['3-day Rolling Std']= self.df_prices['Returns'].rolling(window=3).std()
-        self.df_prices= self.df_prices[self.df_prices.Ticker.str.contains('|'.join(self.tickers))].set_index(['Ticker','Date'])
+        self.df_prices= self.df_prices[self.df_prices.Ticker.str.contains('|'.join(self.tickers))]
         self.df_prices.sort_values(by=self.sort_on_index,inplace=True)
         self.df_prices['difference 1-day']=self.df_prices['Close'].diff()
         self.df_prices['difference 3-days']=self.df_prices['Close'].diff(3)
         self.df_prices['direction 1-day'] = [1 if x >0 else 0 for x in self.df_prices['difference 1-day']]
         self.df_prices['direction 3-days'] = [1 if x >0 else 0 for x in self.df_prices['difference 3-days']]
         #funcs.sort_values(self.df_prices,self.sort_on_index)
+        #self.df_prices.set_index(['Ticker','Date'],inplace=True)
         df= pd.concat([self.sentiment_data,self.df_prices],axis=1,join='inner').dropna()
+        df.set_index(['Ticker','Date'],inplace=True)
         return df.sort_index()
     
 
