@@ -47,18 +47,23 @@ class analyzetranscript:
 
     def get_target_values(self,target_column):
         return self.df_sentiment[target_column].values
+    
+    def __format_date__(self,strdate):
+        return f'{strdate[0:2]}-{strdate[2:4]}-{strdate[4:]}'
 
     #Get distinct ticker names from downloaded transcripts
     def get_tickers(self):
-        for file_name in os.listdir(self.resource_path):
-            if fm.fnmatch(file_name,'*'+self.file_extension):
-                #extract ticker name
-                result = re.match(r"[a-zA-z]+", file_name.strip())
-                _filename=result.group(0).replace('_','')
-                #Check if the ticker is in the list. If not add to the list otherwise
-                #ignore the ticker
-                if self.check_if_exists(self.tickers,_filename):
-                    self.tickers.append(_filename)
+        with os.scandir(self.resource_path) as files:
+            for _file in files:
+                if _file.is_file():
+                    if fm.fnmatch(_file.name,'*'+self.file_extension):
+                        #extract ticker name
+                        result = re.match(r"[a-zA-z]+", _file.name.strip())
+                        _filename=result.group(0).replace('_','')
+                        #Check if the ticker is in the list. If not add to the list otherwise
+                        #ignore the ticker
+                        if self.check_if_exists(self.tickers,_filename):
+                            self.tickers.append(_filename)
 
     #read transcript files and add transcript content to sentiment dataframe
     #https://realpython.com/working-with-files-in-python/
@@ -67,24 +72,29 @@ class analyzetranscript:
         self.sentiments_data=[]
         for ticker in self.tickers:
             search_pattern=f'{ticker}*{self.file_extension}'
-            for filename in os.listdir(self.resource_path):
-                if fm.fnmatch(filename,search_pattern):
-                    #Extract the content from PDF
-                    transcript_quarter=f'{(filename.split(".")[0]).split("_")[2]}:'
-                    transcript_content=textract.process(f'{self.resource_path}/{filename}')
-                    transcript_content=transcript_content.decode(encoding)
-                    transcript_content=str(transcript_content).replace("\n", "").replace("\\", "")
-                    transcript_date=self.find_substring(transcript_content,transcript_quarter,9)
-                    if isinstance(transcript_date,str):
-                        
-                        self.sentiments_data.append(
-                            self.get_sentiment_scores(
-                                transcript_content,
-                                transcript_date.strip(),
-                                ticker,
-                                filename
+            with os.scandir(self.resource_path) as files:
+                for _file in files:
+                    if _file.is_file():
+                        filename=_file.name.strip()
+                        if fm.fnmatch(filename,search_pattern):
+                            #Extract the content from PDF
+                            #transcript_quarter=f'{(filename.split(".")[0]).split("_")[2]}:'
+                            transcript_content=textract.process(f'{self.resource_path}/{filename}')
+                            transcript_content=transcript_content.decode(encoding)
+                            transcript_content=str(transcript_content).replace("\n", "").replace("\\", "")
+                            #transcript_date=self.find_substring(transcript_content,transcript_quarter,9)
+                            transcript_date=(filename.split(".")[0]).split("_")[3]
+
+                            if isinstance(transcript_date,str):
+                                
+                                self.sentiments_data.append(
+                                    self.get_sentiment_scores(
+                                        transcript_content,
+                                        self.__format_date__(transcript_date.strip()),
+                                        ticker,
+                                        filename
+                                    )
                             )
-                    )
 
         transcript_df=pd.DataFrame(self.sentiments_data)
         transcript_df.set_index(['Ticker','Date'],inplace=True)
@@ -97,7 +107,7 @@ class analyzetranscript:
         sentiment_scores = {}
         # Sentiment scoring with VADER
         text_sentiment = self.sentiment_analyzer.polarity_scores(text)
-        sentiment_scores["Date"] = pd.to_datetime(date,format='%m-%d-%y')
+        sentiment_scores["Date"] = pd.to_datetime(date,format='%m-%d-%Y')
         #sentiment_scores["Text"] = text
         sentiment_scores["Ticker"] = source
         #sentiment_scores["Path"] = path
