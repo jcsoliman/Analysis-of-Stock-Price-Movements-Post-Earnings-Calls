@@ -43,9 +43,7 @@ As quarterly earnings reports are listed publicly on Company websites, we assume
 
 ---
 
-## The Models
-
-### **Linear Regression Time Series Model**
+## The Classifier Models
 
 ### **Classifier Models**
 
